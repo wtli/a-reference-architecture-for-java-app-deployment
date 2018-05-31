@@ -72,16 +72,89 @@ drwxr-xr-x. 9 appadmin appadmin 160 May 30 10:18 apache-tomcat-8.5.31
 lrwxrwxrwx. 1 appadmin appadmin  20 May 30 10:18 tomcat -> apache-tomcat-8.5.31
 ```
 
-##### 2.2.3 应用启动和关闭脚本
+##### 2.2.3 启动和关闭脚本
 
-应用的启动和关闭共涉及 4 个脚本。
+应用的启动和关闭共涉及 4 个脚本。全部位于应用文件夹中，与 JDK 和 Tomcat 同级。
 
 |脚本|描述|属性|
 |:--|:--|:--|
-|`app_opts.sh`|存放了应用启动时的自定义参数<br/>（JVM和应用参数等）|`.war`：真实文件<br/>`.jar`：真实文件|
+|`app_opts.sh`|存放了应用启动时的自定义参数<br/>（JVM 参数，应用参数等）|`.war`：真实文件<br/>`.jar`：真实文件|
 |`setenv.sh`|存放了应用启动时的环境参数<br/>（`APP_HOME`，`JAVA_HOME`，`APP_PID`等）|`.war`：软链接，指向`tomcat/bin/setenv.sh`<br/>`.jar`：真实文件|
 |`startup.sh`|启动脚本|`.war`：软链接，指向`tomcat/bin/startup.sh`<br/>`.jar`：真实文件|
 |`shutdown.sh`|关闭脚本|`.war`：软链接，指向`tomcat/bin/shutdown.sh`<br/>`.jar`：真实文件|
 
 
+在 `.war` 环境下如下所示。
+
+```
+[root@localhost app]# ls -l | grep sh
+-rw-r--r--. 1 appadmin appadmin 368 May 30 16:23 app_opts.sh
+lrwxrwxrwx. 1 appadmin appadmin  20 May 30 10:18 setenv.sh -> tomcat/bin/setenv.sh
+lrwxrwxrwx. 1 appadmin appadmin  22 May 30 10:18 shutdown.sh -> tomcat/bin/shutdown.sh
+lrwxrwxrwx. 1 appadmin appadmin  21 May 30 10:18 startup.sh -> tomcat/bin/startup.sh
+```
+
+在 `.jar` 环境下如下所示。
+
+```
+[root@localhost app]# ls -l | grep sh
+-rw-r--r-- 1 appadmin appadmin  336 May 30 16:12 app_opts.sh
+-rw-r--r-- 1 appadmin appadmin  374 May 30 16:12 setenv.sh
+-rwxr-xr-x 1 appadmin appadmin  678 May 30 16:12 shutdown.sh
+-rwxr-xr-x 1 appadmin appadmin 2344 May 30 16:12 startup.sh
+```
+
+##### 2.2.4 应用包存放路径
+
+在 Tomcat 环境中，`.war` 应用包会放在 `tomcat/webapps` 中，Tomcat 发现相应的应用包后会触发解压和部署；在 `.jar` 环境下，应用部署包也需要有特定的位置存放。
+
+为了统一两个环境，方便部署，我们在 `$APP_HOME`下创建了独立的 `webapps`。`.war` 环境下，该路径为软链接，指向 `tomcat/webapps`；`.jar` 环境下，该路径为一个真实文件夹。
+
+`.war` 环境。
+
+```
+[root@localhost app]# ls -l | grep webapps
+lrwxrwxrwx. 1 appadmin appadmin  14 May 30 10:18 webapps -> tomcat/webapps
+```
+
+`.jar` 环境。
+
+```
+[root@localhost app]# ls -l | grep webapps
+drwxr-xr-x 2 appadmin appadmin    6 May 30 16:12 webapps
+```
+
+##### 2.2.5 日志
+
+在 Tomcat 环境中，日志会存放在 `tomcat/logs/` 中，且最主要的日志文件为 `tomcat/logs/catalina.out`；在 `.jar` 环境下，如果不在程序中指定，日志会打印到 `STDOUT`，所以在实际执行时一般使用 `>>` 打印到日志文件。
+
+为了统一，我们在 `$APP_HOME`下创建了独立的 `logs` 文件夹，在其中放置了 `app.log` 文件。`.war` 环境下，该路径为软链接，指向 `../tomcat/logs/catalina.out`；`.jar` 环境下，该路径为一个真实文件。
+
+`.war` 环境。
+
+```
+[root@localhost app]# ls -l logs
+total 0
+lrwxrwxrwx. 1 appadmin appadmin 27 May 30 10:18 app.log -> ../tomcat/logs/catalina.out
+```
+
+`.jar` 环境。
+
+```
+[root@localhost app]# ls -l logs
+total 0
+-rw-r--r-- 1 root root 0 May 31 16:39 app.log
+```
+
+##### 2.2.6 PID 文件
+
+Tomcat 支持使用 PID 文件来管理 Tomcat 进程，只需要用户指定 PID 文件位置即可；`.jar` 环境下，可以通过启动脚本来创建 PID 文件并加以利用。
+
+我们统一在 `$APP_HOME` 内设置应用 PID 文件，命名为 `app.pid`。在 `.war` 环境和 `.jar` 环境下，该文件均为真实文件，在启动应用时创建，在关闭应用时删除。
+
+### 3. 启动原理
+
+- `app_opts.sh` 脚本在两个环境中完全一样，其中定义了三个变量：`$JVM_OPTS` 用于设置堆内存大小、JMX 端口等；`$JAVA_OPTS` 用于设置一些额外需要传入 Java 执行程序的参数，比如 Apollo 参数等；`$APP_OPTS` 用于设置需要传给应用的参数，比如 Eureka 参数等。
+
+`setenv.sh` 中定义了 JDK 所在的路径 `$JAVA_HOME`。
 
