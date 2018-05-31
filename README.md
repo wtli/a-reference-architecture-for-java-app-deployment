@@ -55,7 +55,7 @@ JDK、Tomcat、应用部署包、启动脚本、日志以及 PID 文件均放在
 JDK 的存放位置为 `$APP_HOME/jdk1.x.0_xxx`，例如 `/app/jdk1.8.0_172`，并保留版本号。此外，在与 JDK 平级的文件夹中还会创建不含版本号的软链接 `jdk` ，指向 JDK 文件夹 `jdk1.x.0_xxx` 。在创建软链接时，要避免使用绝对路径，以防在应用文件夹改名之后导致软链接失效。
 
 ```
-[root@basic app]# ls -l  | grep jdk
+[root@localhost app]# ls -l  | grep jdk
 lrwxrwxrwx. 1 appadmin appadmin  12 May 30 10:18 jdk -> jdk1.8.0_172
 drwxr-xr-x. 8 appadmin appadmin 255 Mar 29 12:55 jdk1.8.0_172
 ```
@@ -67,10 +67,21 @@ drwxr-xr-x. 8 appadmin appadmin 255 Mar 29 12:55 jdk1.8.0_172
 Tomcat 的存放位置与 JDK 类似，`$APP_HOME/apache-tomcat-x.x.xx`，例如 `/app/apache-tomcat-8.5.31`，保留版本号。此外，创建软链接 `tomcat` 指向 `apache-tomcat-x.x.xx`。同样要避免使用绝对路径。
 
 ```
-[root@basic app]# ls -l | grep tomcat
+[root@localhost app]# ls -l | grep tomcat
 drwxr-xr-x. 9 appadmin appadmin 160 May 30 10:18 apache-tomcat-8.5.31
 lrwxrwxrwx. 1 appadmin appadmin  20 May 30 10:18 tomcat -> apache-tomcat-8.5.31
 ```
 
 ##### 2.2.3 应用启动和关闭脚本
+
+应用的启动和关闭共涉及 4 个脚本。分别为：
+
+|脚本|描述|属性|
+|:--|:--|:--|
+|`app_opts.sh`|存放了应用启动时的自定义参数<br/>（JVM和应用参数等）|`.war`：真实文件<br/>`.jar`：真实文件|
+|`setenv.sh`|存放了应用启动时的环境参数<br/>（`APP_HOME`，`JAVA_HOME`）|`.war`：软链接，指向`tomcat/bin/setenv.sh`<br/>`.jar`：真实文件|
+|`startup.sh`|启动脚本|`.war`：软链接，指向`tomcat/bin/startup.sh`<br/>`.jar`：真实文件|
+|`shutdown.sh`|关闭脚本|`.war`：软链接，指向`tomcat/bin/shutdown.sh`<br/>`.jar`：真实文件|
+
+
 
