@@ -71,7 +71,7 @@ if [ -f "$APP_PID" ]; then
 fi
 
 # Locate jar file
-jar_file=`find $ARTIFACT_DIR -maxdepth 1 -name "*.jar"`
+jar_file=`find $WEBAPPS_DIR -maxdepth 1 -name "*.jar"`
 jar_file_count=`echo $jar_file | wc -w`
 
 if [ "$jar_file_count" -eq "0" ]; then
