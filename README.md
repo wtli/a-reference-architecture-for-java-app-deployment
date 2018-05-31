@@ -153,7 +153,7 @@ Tomcat 支持使用 PID 文件来管理 Tomcat 进程，只需要用户指定 PI
 
 ### 3. 启动和关闭流程
 
-#### 3.1 通用的自定义参数
+#### 3.1 通用的自定义参数：`app_opts.sh`
 
 `app_opts.sh` 脚本用来存放启动时所需的自定义参数。该文件在两个环境中通用，位置和模版相同。这个文件中定义了三个变量：`$JVM_OPTS` 用于设置堆内存大小、JMX 端口等；`$JAVA_OPTS` 用于设置一些额外需要传入 Java 执行程序的参数，比如 Apollo 参数等；`$APP_OPTS` 用于设置需要传给应用的参数，比如 Eureka 参数等。
 
@@ -172,7 +172,7 @@ Tomcat 支持使用 PID 文件来管理 Tomcat 进程，只需要用户指定 PI
 	- 设置 `$APP_LOGS` 为 `$APP_HOME/logs/app.log`；
 	- 设置 `$WEBAPPS_DIR` 为 `$APP_HOME/webapps`。
 	
-	然后检查是否存在 `app_opts.sh` 文件，如存在则进行 source 操作，引入 `app_opts.sh` 中的三个变量。最后，设置 `$CATALINA_OPTS` 为 `$JVM_OPTS` 以及 `$APP_OPTS` 的结合，由此导入自定义参数。
+	在此之后，检查是否存在 `app_opts.sh` 文件，如存在则进行 source 操作，引入 `app_opts.sh` 中的三个变量。最后，设置 `$CATALINA_OPTS` 为 `$JVM_OPTS` 以及 `$APP_OPTS` 的结合，由此导入自定义参数。
 4. 启动应用，然后依据 `$CATALINA_PID` 创建 PID 文件。至此完成启动。
 
 `.war` 应用的关闭主要利用了 PID 文件。在关闭过程中，执行了 `shutdown.sh` 后，先确定 `$CATALINA_HOME`，然后确定 `CATALINA_HOME/bin/setenv.sh`，之后确定 `$CATALINA_PID` 等信息，根据 PID 信息关闭对应进程，然后删除 PID 文件。
@@ -190,7 +190,7 @@ Tomcat 支持使用 PID 文件来管理 Tomcat 进程，只需要用户指定 PI
 	- 设置 `$APP_LOGS` 为 `$APP_HOME/logs/app.log`；
 	- 设置 `$WEBAPPS_DIR` 为 `$APP_HOME/webapps`。
 	
-	然后检查是否存在 `app_opts.sh` 文件，如存在则进行 source 操作，引入 `app_opts.sh` 中的的三个变量。
+	在此之后，检查是否存在 `app_opts.sh` 文件，如存在则进行 source 操作，引入 `app_opts.sh` 中的的三个变量。
 4. 在 `$WEBAPPS_DIR` 中查找后缀为 `.jar` 的文件，如果没有找到，或者找到多个均会报错退出。
 5. 用获取到的参数、`.jar` 文件和日志路径启动应用并创建 PID。至此完成启动。
 
