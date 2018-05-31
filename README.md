@@ -15,7 +15,6 @@
 - 操作系统：Linux；
 - Java 版本：Oracle JDK 7 及以上（推荐 Oracle JDK 8 以上）；
 - 中间件：Apache Tomcat 8.0 及以上；
-- Java 项目管理：Apache Maven 3 及以上（Gradle 也可，但此处不会示范）。
 - 代码库：Gitlab 7 及以上；
 - CI/CD：Jenkins 2.0 及以上；
 - 批量执行：Ansible 2.4 及以上。
@@ -192,16 +191,83 @@ Tomcat 支持使用 PID 文件来管理 Tomcat 进程，只需要用户指定 PI
 	- 设置 `$WEBAPPS_DIR` 为 `$APP_HOME/webapps`。
 	
 	然后检查是否存在 `app_opts.sh` 文件，如存在则进行 source 操作，引入 `app_opts.sh` 中的的三个变量。
-4. 在 `$WEBAPPS_DIR` 中查找后缀为 `.jar` 的文件，如果没有找到，或者找到超过 1 个均会报错退出。
+4. 在 `$WEBAPPS_DIR` 中查找后缀为 `.jar` 的文件，如果没有找到，或者找到多个均会报错退出。
 5. 用获取到的参数、`.jar` 文件和日志路径启动应用并创建 PID。至此完成启动。
 
-`.jar` 应用的关闭也利用了 PID 文件，根据读取到的 PID 信息关闭对应进程，然后删除 PID 文件。
+`.jar` 应用的关闭也利用了 PID 文件，根据读取到的 PID 信息关闭对应进程，然后删除 PID 文件。 
 
-### 4. 项目描述文件
+### 4. 使用 Gitlab、Jenkins 和 Ansible 实现应用持续部署
 
-### 5. 使用 Gitlab 和 Jenkins 实现应用持续部署
+#### 4.1 概要
 
-### 6. 使用 Ansible Playbook 部署 Java 运行环境
+Gitlab 中的 Webhook 功能可以在某个项目接到代码推送、合并或添加标签时，将该动作通知到 Gitlab 之外的其他服务；Jenkins 可以利用这一功能，在代码出现变更时收到通知，进而触发代码拉取、应用打包和应用部署等动作。
 
-### 7. 参考资料
+这一章节主要介绍在以上应用部署模式下，如何使用 Gitlab、Jenkins 和 Ansible 实现应用持续部署。
 
+#### 4.2 项目描述文件
+
+在这里，我们为项目文件安排了一个 INI 格式的项目描述文件，命名为 description.ini，放置在项目的代码库根目录中。该文件的主要内容为应用打包的目标路径，以及不同环境的启动参数。
+
+使用一个专门的“项目描述文件”解决了以下两个问题：
+
+- Java 应用的打包具有不固定性，应用包的目标路径并不统一。将应用包路径预先配置在该文件中，可以让 Jenkins 在打包之后准确获知应用包位置，以便完成部署动作。
+- 不同的环境可能使用不同的启动参数，随着项目的开发进展，启动参数可能会频繁变更。使用该文件记录启动参数，可以在不修改服务器文件的情况下加载启动参数，将频繁变动的配置剥离。
+
+`description.ini` 文件的格式如下。
+
+```description.ini
+[common]
+packaging=war
+artifact_target=/my-web-api/target/my-web-api.war
+
+[test]
+jvm_opts=-XX:+HeapDumpOnOutOfMemoryError
+java_opts=
+app_opts=
+
+[staging]
+jvm_opts=-XX:+HeapDumpOnOutOfMemoryError
+java_opts=
+app_opts=
+
+[production]
+jvm_opts=-XX:+HeapDumpOnOutOfMemoryError
+java_opts=
+app_opts=
+```
+
+#### 4.3 应用打包
+
+在 Jenkins 中，一般会使用特定 Java 项目采用的项目管理工具进行打包，如 Maven、Gradle 等。打包的方法相对简单和固定，这里暂不赘述。
+
+#### 4.4 应用部署
+
+在测试环境中，应用的部署一般会紧随应用打包进行，通常会使用一些命令批量执行工具，如 Ansible、SaltStack 等。这里我们以 Ansible 为例，简述应用的部署动作。
+
+在 Jenkins 中添加 Ansible 插件后，指定部署需要使用的 Ansible Playbook 和 Inventory 文件。
+
+在 Inventory 文件中列出一套环境中的所有服务器，以应用分组，并且在 Jenkins 项目中指定目标服务器组。
+
+在 Playbook 中，执行以下动作：
+
+1. 确定该应用在 Jenkins 中的目录，然后从 `description.ini` 文件中获取打包路径，以及在该环境下的启动参数。
+2. 执行关闭脚本。
+3. 部署应用包至目标文件夹。
+4. 使用启动参数生成新的 `app_opts.sh` 文件。
+5. 执行启动脚本。
+
+完成以上动作后，即完成了一次应用的打包和部署。
+
+### 5. Ansible Playbook
+
+在这个 Github Repo 的 `playbooks` 文件夹中，包含了依据以上参考规范而编写的 Ansible Playbook 以及用于 Jenkins 应用部署的 Playbook。
+
+### 6. 参考
+
+- http://tomcat.apache.org/
+- https://docs.ansible.com/
+- https://jenkins.io/doc/
+
+### 7. License
+
+MIT
