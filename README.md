@@ -54,7 +54,7 @@ JDK、Tomcat、应用部署包、启动脚本、日志以及 PID 文件均放在
 
 JDK 的存放位置为 `$APP_HOME/jdk1.x.0_xxx`，例如 `/app/jdk1.8.0_172`，并保留版本号。此外，在与 JDK 平级的文件夹中还会创建不含版本号的软链接 `jdk` ，指向 JDK 文件夹 `jdk1.x.0_xxx` 。在创建软链接时，要避免使用绝对路径，以防在应用文件夹改名之后导致软链接失效。
 
-```
+```Bash
 [root@localhost app]# ls -l  | grep jdk
 lrwxrwxrwx. 1 appadmin appadmin  12 May 30 10:18 jdk -> jdk1.8.0_172
 drwxr-xr-x. 8 appadmin appadmin 255 Mar 29 12:55 jdk1.8.0_172
@@ -66,7 +66,7 @@ drwxr-xr-x. 8 appadmin appadmin 255 Mar 29 12:55 jdk1.8.0_172
 
 Tomcat 的存放位置与 JDK 类似，`$APP_HOME/apache-tomcat-x.x.xx`，例如 `/app/apache-tomcat-8.5.31`，保留版本号。此外，创建软链接 `tomcat` 指向 `apache-tomcat-x.x.xx`。同样要避免使用绝对路径。
 
-```
+```Bash
 [root@localhost app]# ls -l | grep tomcat
 drwxr-xr-x. 9 appadmin appadmin 160 May 30 10:18 apache-tomcat-8.5.31
 lrwxrwxrwx. 1 appadmin appadmin  20 May 30 10:18 tomcat -> apache-tomcat-8.5.31
@@ -86,7 +86,7 @@ lrwxrwxrwx. 1 appadmin appadmin  20 May 30 10:18 tomcat -> apache-tomcat-8.5.31
 
 在 `.war` 环境下如下所示。
 
-```
+```Bash
 [root@localhost app]# ls -l | grep sh
 -rw-r--r--. 1 appadmin appadmin 368 May 30 16:23 app_opts.sh
 lrwxrwxrwx. 1 appadmin appadmin  20 May 30 10:18 setenv.sh -> tomcat/bin/setenv.sh
@@ -96,7 +96,7 @@ lrwxrwxrwx. 1 appadmin appadmin  21 May 30 10:18 startup.sh -> tomcat/bin/startu
 
 在 `.jar` 环境下如下所示。
 
-```
+```Bash
 [root@localhost app]# ls -l | grep sh
 -rw-r--r-- 1 appadmin appadmin  336 May 30 16:12 app_opts.sh
 -rw-r--r-- 1 appadmin appadmin  374 May 30 16:12 setenv.sh
@@ -152,9 +152,56 @@ Tomcat 支持使用 PID 文件来管理 Tomcat 进程，只需要用户指定 PI
 
 我们统一在 `$APP_HOME` 内设置应用 PID 文件，命名为 `app.pid`。在 `.war` 环境和 `.jar` 环境下，该文件均为真实文件，在启动应用时创建，在关闭应用时删除。
 
-### 3. 启动原理
+### 3. 启动和关闭流程
 
-- `app_opts.sh` 脚本在两个环境中完全一样，其中定义了三个变量：`$JVM_OPTS` 用于设置堆内存大小、JMX 端口等；`$JAVA_OPTS` 用于设置一些额外需要传入 Java 执行程序的参数，比如 Apollo 参数等；`$APP_OPTS` 用于设置需要传给应用的参数，比如 Eureka 参数等。
+#### 3.1 通用的自定义参数
 
-`setenv.sh` 中定义了 JDK 所在的路径 `$JAVA_HOME`。
+`app_opts.sh` 脚本用来存放启动时所需的自定义参数。该文件在两个环境中通用，位置和模版相同。这个文件中定义了三个变量：`$JVM_OPTS` 用于设置堆内存大小、JMX 端口等；`$JAVA_OPTS` 用于设置一些额外需要传入 Java 执行程序的参数，比如 Apollo 参数等；`$APP_OPTS` 用于设置需要传给应用的参数，比如 Eureka 参数等。
+
+需要注意的是，在 `.war` 应用参数中设置的 `$APP_OPTS` 一般以 “`-D`” 开头；在 `.jar` 应用参数中设置的 `$APP_OPTS` 一般以双横线 “`--`”开头。
+
+#### 3.2 `.war` 应用的启动和关闭流程
+
+`.war`应用的启动流程如下：
+
+1. 执行 `$APP_HOME/startup.sh` 后，该脚本会自动判断自身所处的路径，以确定 Tomcat 文件夹所处的路径，并将该路径设置为 `$CATALINA_HOME` 以便访问 Tomcat 内的其他文件；然后，调用 `$CATALINA_HOME/bin/catalina.sh` 执行启动命令。
+2. `$CATALINA_HOME/bin/catalina.sh` 在执行过程中会检查 `$CATALINA_HOME/bin/` 目录下是否存在名为 `setenv.sh` 的文件，如果有则进行 source 操作，以导入 JDK 路径、PID 文件路径和启动参数等信息。
+3. 本规范中已经创建了 `$CATALINA_HOME/bin/setenv.sh`。在该文件中，会设置如下变量：
+	- 设置 `$APP_HOME` 为 `$CATALINA_HOME` 的父目录；
+	- 设置 `$JAVA_HOME` 为 `$APP_HOME/jdk`；
+	- 设置 `$CATALINA_PID` 和 `$APP_PID` 为 `$APP_HOME/app.pid`；
+	- 设置 `$APP_LOGS` 为 `$APP_HOME/logs/app.log`；
+	- 设置 `$WEBAPPS_DIR` 为 `$APP_HOME/webapps`。
+	
+	然后检查是否存在 `app_opts.sh` 文件，如存在则进行 source 操作，引入 `app_opts.sh` 中的三个变量。最后，设置 `$CATALINA_OPTS` 为 `$JVM_OPTS` 以及 `$APP_OPTS` 的结合，由此导入自定义参数。
+4. 启动应用，然后依据 `$CATALINA_PID` 创建 PID 文件。至此完成启动。
+
+`.war` 应用的关闭主要利用了 PID 文件。在关闭过程中，执行了 `shutdown.sh` 后，先确定 `$CATALINA_HOME`，然后确定 `CATALINA_HOME/bin/setenv.sh`，之后确定 `$CATALINA_PID` 等信息，根据 PID 信息关闭对应进程，然后删除 PID 文件。
+	
+
+#### 3.3 `.jar` 应用的启动和关闭流程
+
+`.jar` 应用的启动方式如下：
+
+1. 执行 `$APP_HOME/startup.sh`，判断自身所处路径，并设置为 `$APP_HOME`；
+2. 检查 $APP_HOME/setenv.sh 是否存在：如果存在则执行 source；不存在则退出；
+3. 本规范中已经创建了 `$APP_HOME/setenv.sh`。在该文件中，会设置如下变量：
+	- 设置 `$JAVA_HOME` 为 `$APP_HOME/jdk`；
+	- 设置 `$APP_PID` 为 `$APP_HOME/app.pid`；
+	- 设置 `$APP_LOGS` 为 `$APP_HOME/logs/app.log`；
+	- 设置 `$WEBAPPS_DIR` 为 `$APP_HOME/webapps`。
+	
+	然后检查是否存在 `app_opts.sh` 文件，如存在则进行 source 操作，引入 `app_opts.sh` 中的的三个变量。
+4. 在 `$WEBAPPS_DIR` 中查找后缀为 `.jar` 的文件，如果没有找到，或者找到超过 1 个均会报错退出。
+5. 用获取到的参数、`.jar` 文件和日志路径启动应用并创建 PID。至此完成启动。
+
+`.jar` 应用的关闭也利用了 PID 文件，根据读取到的 PID 信息关闭对应进程，然后删除 PID 文件。
+
+### 4. 项目描述文件
+
+### 5. 使用 Gitlab 和 Jenkins 实现应用持续部署
+
+### 6. 使用 Ansible Playbook 部署 Java 运行环境
+
+### 7. 参考资料
 
