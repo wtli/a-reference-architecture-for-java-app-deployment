@@ -1,0 +1,4 @@
+- name: app_home-add_app_opts
+  template:
+    src: "app_opts.sh.j2"
+    dest: "{{ app_home }}/app_opts.sh"

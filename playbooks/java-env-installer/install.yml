@@ -1,0 +1,7 @@
+---
+- name: Install a new environment for Java APP
+  hosts: all
+  gather_facts: yes
+  roles:
+    - {role: check_vars }
+    - {role: app_home }

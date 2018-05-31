@@ -1,0 +1,22 @@
+---
+# app
+app_home: /app
+app_user_name: appadmin
+app_group_name: appadmin
+app_user_uid: 1000002
+app_group_gid: 1000002
+app_opts: ""
+jvm_opts: ""
+java_opts: ""
+
+# Default Packaging
+packaging: jar
+
+# JDK
+java_version_major: 8
+java_version_minor: 172
+jdk_filename: jdk-{{ java_version_major }}u{{ java_version_minor }}-linux-x64.tar.gz
+
+# Tomcat
+tomcat_version: 8.5.31
+tomcat_filename: apache-tomcat-{{ tomcat_version }}.tar.gz

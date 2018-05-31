@@ -1,0 +1,6 @@
+- name: app_home-change_ownership
+  file:
+    path: "{{ app_home }}"
+    owner: "{{ app_user_name }}"
+    group: "{{ app_group_name }}"
+    recurse: yes

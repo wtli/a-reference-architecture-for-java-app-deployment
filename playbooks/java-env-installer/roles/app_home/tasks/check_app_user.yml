@@ -1,0 +1,13 @@
+- name: app_home-add_group_if_not_exist
+  group:
+    name: "{{ app_group_name }}"
+    state: present
+    gid: "{{ app_group_gid }}"
+
+- name: app_home-check_app_admin
+  user:
+    name: "{{ app_user_name }}"
+    uid: "{{ app_user_uid }}"
+    group: "{{ app_group_name }}"
+    state: present
+    create_home: yes

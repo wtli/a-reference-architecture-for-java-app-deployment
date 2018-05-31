@@ -1,0 +1,4 @@
+- name: app_home-create_app_home
+  file:
+    path: "{{ app_home }}"
+    state: directory

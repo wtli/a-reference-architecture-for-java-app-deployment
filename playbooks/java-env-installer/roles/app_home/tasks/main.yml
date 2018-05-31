@@ -1,0 +1,15 @@
+- import_tasks: check_app_admin.yml
+
+- import_tasks: create_app_home.yml
+
+- import_tasks: install_jdk.yml
+
+- import_tasks: install_tomcat_and_scripts_for_war.yml
+  when: "packaging == 'war'"
+
+- import_tasks: install_scripts_for_jar.yml
+  when: "packaging == 'jar'"
+
+- import_tasks: add_app_opts.yml
+
+- import_tasks: change_ownership.yml

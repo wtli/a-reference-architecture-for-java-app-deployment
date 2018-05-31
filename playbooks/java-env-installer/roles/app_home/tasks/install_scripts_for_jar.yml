@@ -1,0 +1,17 @@
+- name: app_home-create_dirs
+  file:
+    path: "{{ item }}"
+    state: directory
+  loop:
+    - "{{ app_home }}/webapps"
+    - "{{ app_home }}/logs"
+
+- name: app_home-install_scripts
+  copy:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    mode: "{{ item.mode }}"
+  loop:
+    - { src: 'jar/startup.sh', dest: '{{ app_home }}/startup.sh', mode: '0755' }
+    - { src: 'jar/shutdown.sh', dest: '{{ app_home }}/shutdown.sh', mode: '0755' }
+    - { src: 'jar/setenv.sh', dest: '{{ app_home }}/setenv.sh', mode: '0644' }

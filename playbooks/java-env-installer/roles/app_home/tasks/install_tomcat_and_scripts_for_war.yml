@@ -1,0 +1,43 @@
+- name: app_home-install_tomcat
+  unarchive:
+    src: "tomcat/{{ tomcat_filename }}"
+    dest: "{{ app_home }}"
+
+- name: app_home-soft_link_tomcat
+  file:
+    src: "apache-tomcat-{{ tomcat_version }}"
+    dest: "{{ app_home }}/tomcat"
+    state: link
+
+- name: app_home-create_logs_dir
+  file:
+    path: "{{ app_home }}/logs/"
+    state: directory
+
+- name: app_home-remove_webapps
+  file:
+    path: "{{ app_home }}/tomcat/webapps/"
+    state: absent
+
+- name: app_home-recreate_webapps
+  file:
+    path: "{{ app_home }}/tomcat/webapps/"
+    state: directory
+  
+- name: app_home-install_setenv
+  copy:
+    src: "war/setenv.sh"
+    dest: "{{ app_home }}/tomcat/bin/setenv.sh"
+
+- name: app_home-soft_link_scripts_and_dirs
+  file:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    state: link
+    force: yes
+  loop:
+    - { src: 'tomcat/bin/startup.sh', dest: '{{ app_home }}/startup.sh' }
+    - { src: 'tomcat/bin/shutdown.sh', dest: '{{ app_home }}/shutdown.sh' }
+    - { src: 'tomcat/webapps', dest: '{{ app_home }}/webapps' }
+    - { src: 'tomcat/bin/setenv.sh', dest: '{{ app_home }}/setenv.sh' }
+    - { src: '../tomcat/logs/catalina.out', dest: '{{ app_home }}/logs/app.log' }

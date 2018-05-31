@@ -1,0 +1,10 @@
+- name: app_home-install_jdk
+  unarchive:
+    src: "jdk/{{ jdk_filename }}"
+    dest: "{{ app_home }}"
+
+- name: app_home-soft_link_to_jdk
+  file:
+    src: "jdk1.{{ java_version_major }}.0_{{ java_version_minor }}"
+    dest: "{{ app_home }}/jdk"
+    state: link
