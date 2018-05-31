@@ -7,9 +7,8 @@
 
 APP_HOME=`realpath $CATALINA_HOME/..`
 JAVA_HOME="$APP_HOME/jdk"
-
 WEBAPPS_DIR="$CATALINA_HOME/webapps"
-
+APP_LOG="$APP_HOME/logs/app.log"
 APP_PID="$APP_HOME/app.pid"
 CATALINA_PID="$APP_PID"
 
