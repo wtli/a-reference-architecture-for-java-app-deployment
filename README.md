@@ -74,12 +74,12 @@ lrwxrwxrwx. 1 appadmin appadmin  20 May 30 10:18 tomcat -> apache-tomcat-8.5.31
 
 ##### 2.2.3 应用启动和关闭脚本
 
-应用的启动和关闭共涉及 4 个脚本。分别为：
+应用的启动和关闭共涉及 4 个脚本。
 
 |脚本|描述|属性|
 |:--|:--|:--|
 |`app_opts.sh`|存放了应用启动时的自定义参数<br/>（JVM和应用参数等）|`.war`：真实文件<br/>`.jar`：真实文件|
-|`setenv.sh`|存放了应用启动时的环境参数<br/>（`APP_HOME`，`JAVA_HOME`）|`.war`：软链接，指向`tomcat/bin/setenv.sh`<br/>`.jar`：真实文件|
+|`setenv.sh`|存放了应用启动时的环境参数<br/>（`APP_HOME`，`JAVA_HOME`，`APP_LOG`，`APP_PID`等）|`.war`：软链接，指向`tomcat/bin/setenv.sh`<br/>`.jar`：真实文件|
 |`startup.sh`|启动脚本|`.war`：软链接，指向`tomcat/bin/startup.sh`<br/>`.jar`：真实文件|
 |`shutdown.sh`|关闭脚本|`.war`：软链接，指向`tomcat/bin/shutdown.sh`<br/>`.jar`：真实文件|
 
