@@ -7,7 +7,7 @@
     java_opts: "{{ lookup('ini', 'java_opts section=test file={{ workspace }}/description.ini') }}"
     app_opts: "{{ lookup('ini', 'app_opts section=test file={{ workspace }}/description.ini') }}"
   tasks:
-    - name: shutdown tomcat
+    - name: shutdown app
       command: "{{ app_home }}/shutdown.sh -force"
       ignore_errors: yes
     - name: deploy new packages
@@ -18,7 +18,7 @@
       template:
         src: "app_opts.sh.j2"
         dest: "{{ app_home }}/app_opts.sh"
-    - name: start tomcat
+    - name: start app
       command: "nohup {{ app_home }}/startup.sh"
     - debug:
         msg: "{{ app_home }}, {{ target }}"
