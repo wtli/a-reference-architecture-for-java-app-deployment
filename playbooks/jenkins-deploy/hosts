@@ -1,0 +1,8 @@
+[basic]
+10.2.5.150  language=java  packaging=war
+
+[center-online]
+10.2.5.151  language=java  packaging=jar
+
+[all:vars]
+app_home=/app
